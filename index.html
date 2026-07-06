@@ -1,0 +1,843 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Speaking Points</title>
+  <!-- PWA iOS -->
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Speaking Points">
+  <meta name="theme-color" content="#534AB7">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:system-ui,-apple-system,sans-serif;background:#f5f5f7}
+#app{max-width:520px;margin:0 auto;padding:16px 12px}
+.app-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;padding-bottom:14px;border-bottom:1px solid #e0e0e0}
+.app-brand{display:flex;align-items:center;gap:9px}
+.brand-dot{display:flex;gap:4px;align-items:center}
+.dot{width:8px;height:8px;border-radius:50%;background:#534AB7}
+.dot.sm{width:5px;height:5px;background:#AFA9EC;margin-top:3px}
+.brand-name{font-size:19px;font-weight:500;color:#1a1a1a;letter-spacing:-0.3px}
+.top-actions{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}
+.btn-small{font-size:12px;padding:5px 10px;border:1px solid #d0d0d0;border-radius:8px;background:#fff;color:#555;cursor:pointer;transition:background 0.1s}
+.btn-small:hover{background:#f0f0f0}
+.btn-icon{width:30px;height:30px;border:1px solid #d0d0d0;border-radius:50%;background:#fff;color:#555;cursor:pointer;font-size:14px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.btn-icon:hover{background:#f0f0f0}
+.class-bar{display:flex;align-items:center;gap:8px;margin-bottom:14px}
+.class-select{flex:1;font-size:14px;padding:8px 12px;border:1px solid #d0d0d0;border-radius:8px;background:#fff;color:#1a1a1a;cursor:pointer;appearance:none;-webkit-appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23888' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 10px center;padding-right:30px}
+.btn-add-class{font-size:12px;padding:6px 10px;border:1px solid #534AB7;border-radius:8px;background:transparent;color:#534AB7;cursor:pointer;white-space:nowrap}
+.btn-add-class:hover{background:#EEEDFE}
+.toolbar{display:flex;align-items:center;justify-content:flex-end;margin-bottom:10px;gap:6px}
+.sort-group{display:flex;border:1px solid #d0d0d0;border-radius:8px;overflow:hidden}
+.sort-btn{font-size:12px;padding:5px 10px;background:#fff;color:#555;cursor:pointer;border:none;border-right:1px solid #d0d0d0;transition:background 0.1s;white-space:nowrap}
+.sort-btn:last-child{border-right:none}
+.sort-btn:hover{background:#f0f0f0}
+.sort-btn.active{background:#EEEDFE;color:#3C3489;font-weight:500}
+.student-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+@media (orientation:landscape) and (min-width:700px){
+  #app{max-width:1100px}
+  .student-grid{grid-template-columns:repeat(8,minmax(0,1fr))}
+}
+.student-card{display:flex;flex-direction:column;border:1px solid #e0e0e0;border-radius:12px;background:#fff;overflow:hidden;user-select:none;-webkit-tap-highlight-color:transparent;transition:border-color 0.15s,box-shadow 0.15s}
+.student-card.draggable{cursor:grab}
+.student-card.dragging{opacity:0.45;box-shadow:0 6px 18px rgba(0,0,0,0.18);z-index:10;cursor:grabbing}
+.student-card.drag-over{border-color:#7c3aed;box-shadow:0 0 0 2px #7c3aed55}
+.card-top{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;padding:8px 4px 6px;flex:1}
+.name{font-size:12px;font-weight:500;color:#1a1a1a;line-height:1.25;word-break:break-word;text-align:center}
+.score-badge{min-width:28px;height:20px;border-radius:10px;background:#f0f0f0;border:1px solid #e0e0e0;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:500;color:#888;padding:0 7px;transition:background 0.15s,color 0.15s}
+.score-badge.bump{background:#E1F5EE;color:#085041;border-color:#5DCAA5}
+.score-badge.nonzero{background:#EEEDFE;color:#3C3489;border-color:#AFA9EC}
+.card-controls{display:flex;height:38px;border-top:1px solid #e0e0e0}
+.btn-minus{flex:1;border:none;background:#ef4444;color:#fff;font-size:20px;font-weight:300;cursor:pointer;transition:background 0.1s;padding:0}
+.btn-minus:hover{background:#dc2626}
+.btn-minus:disabled{opacity:0.3;cursor:default}
+.btn-plus{flex:1;border:none;border-left:1px solid rgba(255,255,255,0.3);background:#22c55e;color:#fff;font-size:20px;font-weight:300;cursor:pointer;transition:background 0.1s;padding:0}
+.btn-plus:hover{background:#16a34a}
+.flash{animation:flash 0.35s ease-out}
+@keyframes flash{0%{transform:scale(1.25)}100%{transform:scale(1)}}
+.total-bar{margin-top:14px;padding:11px 16px;border-radius:12px;background:#f0f0f0;display:flex;justify-content:space-between;align-items:center}
+.total-bar span{font-size:13px;color:#666}
+.total-bar strong{font-size:15px;font-weight:500;color:#1a1a1a}
+.empty-class{text-align:center;padding:40px 20px;color:#999;font-size:14px}
+.screen{display:none;flex-direction:column}
+.screen.active{display:flex}
+.sub-header{display:flex;align-items:center;gap:10px;margin-bottom:16px;padding-bottom:12px;border-bottom:1px solid #e0e0e0}
+.btn-back{font-size:12px;padding:5px 10px;border:1px solid #d0d0d0;border-radius:8px;background:#fff;color:#555;cursor:pointer}
+.btn-back:hover{background:#f0f0f0}
+.sub-header h2{font-size:17px;font-weight:500;color:#1a1a1a}
+.day-block{margin-bottom:12px;border:1px solid #e0e0e0;border-radius:12px;overflow:hidden}
+.day-title{padding:8px 14px;background:#f5f5f7;font-size:12px;font-weight:500;color:#666;letter-spacing:0.3px}
+.day-row{display:flex;align-items:center;justify-content:space-between;padding:9px 14px;border-top:1px solid #f0f0f0;background:#fff}
+.day-row .rname{font-size:14px;color:#1a1a1a}
+.day-row .rcount{font-size:13px;font-weight:500;color:#3C3489;background:#EEEDFE;border:1px solid #AFA9EC;border-radius:12px;min-width:28px;height:22px;display:flex;align-items:center;justify-content:center;padding:0 8px}
+.day-row .rcount-minus{font-size:13px;font-weight:500;color:#A32D2D;background:#FCEBEB;border:1px solid #f09595;border-radius:12px;min-width:28px;height:22px;display:flex;align-items:center;justify-content:center;padding:0 8px}
+.rcount-group{display:flex;gap:4px;align-items:center}
+.empty-msg{font-size:14px;color:#aaa;text-align:center;padding:40px 0}
+.section-label{font-size:12px;font-weight:500;color:#666;margin-bottom:8px;margin-top:18px;letter-spacing:0.3px}
+.section-label:first-child{margin-top:0}
+.export-box{width:100%;padding:10px;font-size:12px;border:1px solid #d0d0d0;border-radius:8px;font-family:monospace;background:#f5f5f7;color:#1a1a1a;resize:none;height:100px}
+.notice{font-size:12px;color:#aaa;margin-top:6px;line-height:1.5}
+.btn-full{width:100%;font-size:13px;padding:10px;border:1px solid #d0d0d0;border-radius:8px;background:#fff;color:#555;cursor:pointer;margin-top:10px}
+.btn-full:hover{background:#f0f0f0}
+.btn-full.accent{background:#534AB7;color:#fff;border-color:#534AB7}
+.btn-full.accent:hover{background:#3C3489;border-color:#3C3489}
+.class-list{display:flex;flex-direction:column;gap:8px;margin-bottom:16px}
+.class-item{display:flex;align-items:center;justify-content:space-between;padding:10px 14px;border:1px solid #e0e0e0;border-radius:12px;background:#fff}
+.class-item.active-class{border-color:#AFA9EC;background:#EEEDFE}
+.class-item-name{font-size:14px;color:#1a1a1a;font-weight:500}
+.class-item-count{font-size:12px;color:#888}
+.class-item-actions{display:flex;gap:6px}
+.btn-xs{font-size:11px;padding:4px 8px;border:1px solid #d0d0d0;border-radius:6px;background:#fff;color:#555;cursor:pointer}
+.btn-xs:hover{background:#f0f0f0}
+.btn-xs.danger{border-color:#f09595;color:#A32D2D}
+.btn-xs.danger:hover{background:#FCEBEB}
+.tuto-block{display:flex;gap:14px;padding:14px 0;border-bottom:1px solid #e0e0e0}
+.tuto-block:last-child{border-bottom:none}
+.tuto-icon{width:40px;height:40px;border-radius:8px;background:#EEEDFE;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:18px}
+.tuto-text{display:flex;flex-direction:column;gap:4px}
+.tuto-title{font-size:14px;font-weight:500;color:#1a1a1a}
+.tuto-desc{font-size:13px;color:#555;line-height:1.55}
+.tuto-version{margin-top:18px;padding-top:14px;border-top:1px solid #e0e0e0;font-size:12px;color:#aaa;text-align:center}
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#26215C;color:#CECBF6;font-size:13px;padding:8px 18px;border-radius:8px;opacity:0;transition:opacity 0.2s;pointer-events:none;white-space:nowrap;z-index:300}
+.toast.show{opacity:1}
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.4);display:flex;align-items:center;justify-content:center;z-index:200}
+.modal{background:#fff;border-radius:12px;border:1px solid #e0e0e0;padding:20px;width:300px;max-width:90vw}
+.modal h3{font-size:15px;font-weight:500;margin-bottom:12px;color:#1a1a1a}
+.modal input[type=text]{width:100%;padding:9px 12px;font-size:14px;border:1px solid #d0d0d0;border-radius:8px;background:#f5f5f7;color:#1a1a1a;margin-bottom:4px}
+.modal textarea{width:100%;height:150px;padding:10px;font-size:13px;border:1px solid #d0d0d0;border-radius:8px;font-family:monospace;background:#f5f5f7;color:#1a1a1a;resize:none}
+.modal-hint{font-size:12px;color:#aaa;margin:6px 0 14px}
+.modal-actions{display:flex;gap:8px;justify-content:flex-end}
+.btn-primary{font-size:13px;padding:8px 16px;border:none;border-radius:8px;background:#534AB7;color:#fff;cursor:pointer;font-weight:500}
+.btn-primary:hover{background:#3C3489}
+.btn-cancel{font-size:13px;padding:8px 16px;border:1px solid #d0d0d0;border-radius:8px;background:#fff;color:#555;cursor:pointer}
+</style>
+</head>
+<body>
+<div id="app">
+
+  <div id="screen-main" class="screen active">
+    <div class="app-header">
+      <div class="app-brand">
+        <div class="brand-dot">
+          <div class="dot"></div>
+          <div class="dot sm"></div>
+        </div>
+        <span class="brand-name">Pingpoint</span>
+      </div>
+      <div class="top-actions">
+        <button class="btn-small" id="btn-transfer">Transfert</button>
+        <button class="btn-small" id="btn-export-csv">Export historique</button>
+        <button class="btn-small" id="btn-hist">Historique</button>
+        <button class="btn-small" id="btn-reset">Réinitialiser</button>
+        <button class="btn-small" id="btn-edit">Élèves</button>
+        <button class="btn-icon" id="btn-help">?</button>
+      </div>
+    </div>
+
+    <div class="class-bar">
+      <select class="class-select" id="class-select"></select>
+      <button class="btn-add-class" id="btn-manage-classes">Gérer les classes</button>
+    </div>
+
+    <div class="toolbar">
+      <div class="sort-group">
+        <button class="sort-btn" id="sort-input" onclick="setSort('input')">Saisie</button>
+        <button class="sort-btn" id="sort-prenom" onclick="setSort('prenom')">A→Z prénom</button>
+        <button class="sort-btn" id="sort-nom" onclick="setSort('nom')">A→Z nom</button>
+      </div>
+    </div>
+
+    <div class="student-grid" id="grid"></div>
+    <div id="empty-class" class="empty-class" style="display:none">
+      <p>Aucun élève dans cette classe.</p>
+      <p style="margin-top:6px;font-size:13px">Ajoutez-en via le bouton "Élèves".</p>
+    </div>
+    <div class="total-bar" id="total-bar" style="display:none">
+      <span>Total interventions</span>
+      <strong id="total-count">0</strong>
+    </div>
+  </div>
+
+  <div id="screen-hist" class="screen">
+    <div class="sub-header">
+      <button class="btn-back" id="btn-back-hist">← Retour</button>
+      <h2 id="hist-title">Historique</h2>
+    </div>
+    <div id="hist-content"></div>
+  </div>
+
+  <div id="screen-transfer" class="screen">
+    <div class="sub-header">
+      <button class="btn-back" id="btn-back-transfer">← Retour</button>
+      <h2>Transfert</h2>
+    </div>
+    <p class="section-label">Exporter toutes les données</p>
+    <textarea class="export-box" id="export-text" readonly></textarea>
+    <p class="notice">Copiez ce texte, puis collez-le sur l'autre appareil.</p>
+    <button class="btn-full accent" id="btn-copy">Copier dans le presse-papier</button>
+    <p class="section-label">Importer depuis un autre appareil</p>
+    <textarea class="export-box" id="import-text" placeholder="Collez ici le texte copié depuis l'autre appareil…"></textarea>
+    <p class="notice">Les données importées remplaceront les données actuelles.</p>
+    <button class="btn-full accent" id="btn-import">Importer</button>
+  </div>
+
+  <div id="screen-classes" class="screen">
+    <div class="sub-header">
+      <button class="btn-back" id="btn-back-classes">← Retour</button>
+      <h2>Gérer les classes</h2>
+    </div>
+    <div class="class-list" id="class-list"></div>
+    <button class="btn-full accent" id="btn-new-class">+ Nouvelle classe</button>
+  </div>
+
+  <div id="screen-help" class="screen">
+    <div class="sub-header">
+      <button class="btn-back" id="btn-back-help">← Retour</button>
+      <h2>Aide</h2>
+    </div>
+    <div class="tuto-block"><div class="tuto-icon">👆</div><div class="tuto-text"><span class="tuto-title">Enregistrer une intervention</span><span class="tuto-desc">Appuyez sur la carte d'un élève pour lui ajouter un point. Le badge violet s'incrémente à chaque tap.</span></div></div>
+    <div class="tuto-block"><div class="tuto-icon">🔤</div><div class="tuto-text"><span class="tuto-title">Ordre d'affichage</span><span class="tuto-desc">Trois options : ordre de saisie, tri A→Z par prénom (premier mot), tri A→Z par nom de famille (dernier mot). Le réglage est mémorisé.</span></div></div>
+    <div class="tuto-block"><div class="tuto-icon">✋</div><div class="tuto-text"><span class="tuto-title">Déplacer un élève</span><span class="tuto-desc">En mode "Saisie", restez appuyé un instant sur une carte puis faites-la glisser pour réorganiser l'ordre d'affichage. Disponible uniquement en tri "Saisie".</span></div></div>
+    <div class="tuto-block"><div class="tuto-icon">🏫</div><div class="tuto-text"><span class="tuto-title">Gérer plusieurs classes</span><span class="tuto-desc">Utilisez le sélecteur en haut pour changer de classe. Via "Gérer les classes", créez, renommez ou supprimez vos classes.</span></div></div>
+    <div class="tuto-block"><div class="tuto-icon">🎨</div><div class="tuto-text"><span class="tuto-title">Lire les badges en un coup d'œil</span><span class="tuto-desc">Badge gris = aucune intervention. Badge violet = au moins une intervention. Un flash vert confirme chaque nouveau point.</span></div></div>
+    <div class="tuto-block"><div class="tuto-icon">👥</div><div class="tuto-text"><span class="tuto-title">Gérer la liste d'élèves</span><span class="tuto-desc">Bouton "Élèves" : modifiez la liste de la classe active, un nom par ligne.</span></div></div>
+    <div class="tuto-block"><div class="tuto-icon">🔄</div><div class="tuto-text"><span class="tuto-title">Réinitialiser les scores</span><span class="tuto-desc">Remet à zéro les scores de la classe active. À faire en fin de trimestre. L'historique des séances est conservé.</span></div></div>
+    <div class="tuto-block"><div class="tuto-icon">📅</div><div class="tuto-text"><span class="tuto-title">Historique par classe</span><span class="tuto-desc">L'historique est séparé par classe. Sélectionnez une classe puis appuyez sur "Historique" pour consulter ses séances passées.</span></div></div>
+    <div class="tuto-block"><div class="tuto-icon">📲</div><div class="tuto-text"><span class="tuto-title">Utiliser sur plusieurs appareils</span><span class="tuto-desc">Bouton "Transfert" : exporte toutes vos classes et données en un seul bloc à copier-coller sur un autre appareil.</span></div></div>
+    <div class="tuto-block"><div class="tuto-icon">💾</div><div class="tuto-text"><span class="tuto-title">Sauvegarde automatique</span><span class="tuto-desc">Toutes les données sont enregistrées dans votre navigateur et persistent après fermeture.</span></div></div>
+    <p class="tuto-version">Pingpoint — v2.2</p>
+  </div>
+
+</div>
+
+<div class="modal-overlay" id="modal" style="display:none">
+  <div class="modal">
+    <h3 id="modal-title"></h3>
+    <input type="text" id="modal-input-text" style="display:none" placeholder="">
+    <textarea id="modal-input-area" style="display:none"></textarea>
+    <p class="modal-hint" id="modal-hint"></p>
+    <div class="modal-actions">
+      <button class="btn-cancel" id="btn-cancel">Annuler</button>
+      <button class="btn-primary" id="btn-confirm">Valider</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const STORAGE_KEY = 'pingpoint_v2';
+const SORT_KEY = 'pingpoint_sort';
+
+function loadData() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (raw) return JSON.parse(raw);
+  } catch(e) {}
+  return {
+    activeClass: 'Classe 1',
+    classes: {
+      'Classe 1': {
+        students: ['Carlos Alcaraz','Jannik Sinner','Novak Djokovic','Alexander Zverev','Lorenzo Musetti','Aryna Sabalenka','Elena Rybakina','Iga Swiatek','Coco Gauff','Jessica Pegula'],
+        scores: {},
+        history: {}
+      }
+    }
+  };
+}
+
+function saveData() {
+  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(data)); } catch(e) {}
+}
+
+let data = loadData();
+let sortMode = localStorage.getItem(SORT_KEY) || 'input';
+
+function currentClass() {
+  return data.classes[data.activeClass] || Object.values(data.classes)[0];
+}
+
+function initials(n) {
+  return n.trim().split(/\s+/).map(w => w[0]||'').join('').toUpperCase().slice(0,2);
+}
+
+function todayKey() {
+  const d = new Date();
+  return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+}
+
+function formatDate(k) {
+  const [y,m,d] = k.split('-');
+  return d+'/'+m+'/'+y;
+}
+
+function totalSum() {
+  return Object.values(currentClass().scores).reduce((a,b) => a+b, 0);
+}
+
+function sortedStudents(students) {
+  if (sortMode === 'input') return [...students];
+  return [...students].sort((a, b) => {
+    const pa = a.trim().split(/\s+/);
+    const pb = b.trim().split(/\s+/);
+    const ka = (sortMode === 'prenom' ? pa[0] : pa[pa.length - 1]) || a;
+    const kb = (sortMode === 'prenom' ? pb[0] : pb[pb.length - 1]) || b;
+    return ka.localeCompare(kb, 'fr', { sensitivity: 'base' });
+  });
+}
+
+function setSort(mode) {
+  sortMode = mode;
+  localStorage.setItem(SORT_KEY, mode);
+  render();
+}
+
+function updateSortButtons() {
+  ['input','prenom','nom'].forEach(m => {
+    const btn = document.getElementById('sort-' + m);
+    btn.classList.toggle('active', sortMode === m);
+  });
+}
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2200);
+}
+
+function renderClassSelector() {
+  const sel = document.getElementById('class-select');
+  sel.innerHTML = '';
+  Object.keys(data.classes).forEach(name => {
+    const opt = document.createElement('option');
+    opt.value = name;
+    opt.textContent = name;
+    if (name === data.activeClass) opt.selected = true;
+    sel.appendChild(opt);
+  });
+}
+
+function render() {
+  renderClassSelector();
+  updateSortButtons();
+  const cls = currentClass();
+  const grid = document.getElementById('grid');
+  const emptyMsg = document.getElementById('empty-class');
+  const bar = document.getElementById('total-bar');
+  grid.innerHTML = '';
+
+  if (!cls.students || cls.students.length === 0) {
+    emptyMsg.style.display = 'block';
+    bar.style.display = 'none';
+    return;
+  }
+  emptyMsg.style.display = 'none';
+
+  sortedStudents(cls.students).forEach(name => {
+    const sc = cls.scores[name] || 0;
+    const bid = 'b' + btoa(encodeURIComponent(name)).replace(/[^a-zA-Z0-9]/g,'');
+    const card = document.createElement('div');
+    card.className = 'student-card' + (sortMode === 'input' ? ' draggable' : '');
+    card.dataset.name = name;
+    card.innerHTML = `<div class="card-top"><div class="name">${name}</div><div class="score-badge${sc > 0 ? ' nonzero' : ''}" id="${bid}">${sc}</div></div><div class="card-controls"><button class="btn-minus" data-bid="${bid}" data-name="${name}">−</button><button class="btn-plus" data-bid="${bid}" data-name="${name}">+</button></div>`;
+    card.querySelector('.btn-plus').addEventListener('click', e => { e.stopPropagation(); addPoint(name, bid); });
+    card.querySelector('.btn-minus').addEventListener('click', e => { e.stopPropagation(); removePoint(name, bid); });
+    if (sortMode === 'input') enableCardDrag(card);
+    grid.appendChild(card);
+  });
+
+  document.getElementById('total-count').textContent = totalSum();
+  bar.style.display = 'flex';
+}
+
+function enableCardDrag(card) {
+  card.addEventListener('pointerdown', e => {
+    if (e.target.closest('.btn-plus,.btn-minus')) return;
+    if (e.pointerType === 'mouse' && e.button !== 0) return;
+
+    const draggedName = card.dataset.name;
+    const startX = e.clientX, startY = e.clientY;
+    let dragging = false;
+    let highlightedCard = null;
+
+    function clearHighlight() {
+      if (highlightedCard) { highlightedCard.classList.remove('drag-over'); highlightedCard = null; }
+    }
+
+    function onMove(ev) {
+      if (!dragging) {
+        if (Math.abs(ev.clientX - startX) < 8 && Math.abs(ev.clientY - startY) < 8) return;
+        dragging = true;
+        card.classList.add('dragging');
+        document.body.style.userSelect = 'none';
+      }
+      card.style.pointerEvents = 'none';
+      const below = document.elementFromPoint(ev.clientX, ev.clientY);
+      card.style.pointerEvents = '';
+      const overCard = below && below.closest('.student-card[data-name]');
+      clearHighlight();
+      if (overCard && overCard !== card) {
+        overCard.classList.add('drag-over');
+        highlightedCard = overCard;
+      }
+    }
+
+    function onUp(ev) {
+      document.removeEventListener('pointermove', onMove);
+      document.removeEventListener('pointerup', onUp);
+      document.removeEventListener('pointercancel', onUp);
+      clearHighlight();
+      card.classList.remove('dragging');
+      document.body.style.userSelect = '';
+
+      if (!dragging) return;
+
+      // Trouver la carte cible sous le pointeur
+      card.style.pointerEvents = 'none';
+      const below = document.elementFromPoint(ev.clientX, ev.clientY);
+      card.style.pointerEvents = '';
+      const overCard = below && below.closest('.student-card[data-name]');
+      if (overCard && overCard !== card) {
+        const targetName = overCard.dataset.name;
+        const students = currentClass().students;
+        const fromIdx = students.indexOf(draggedName);
+        const toIdx   = students.indexOf(targetName);
+        if (fromIdx !== -1 && toIdx !== -1 && fromIdx !== toIdx) {
+          // Échange simple des deux positions
+          [students[fromIdx], students[toIdx]] = [students[toIdx], students[fromIdx]];
+          saveData();
+          render();
+        }
+      }
+    }
+
+    document.addEventListener('pointermove', onMove);
+    document.addEventListener('pointerup', onUp);
+    document.addEventListener('pointercancel', onUp);
+  });
+}
+
+function addPoint(name, bid) {
+  const cls = currentClass();
+  cls.scores[name] = (cls.scores[name] || 0) + 1;
+  const today = todayKey();
+  if (!cls.history[today]) cls.history[today] = {};
+  cls.history[today][name] = (cls.history[today][name] || 0) + 1;
+  saveData();
+  const badge = document.getElementById(bid);
+  if (badge) {
+    badge.textContent = cls.scores[name];
+    badge.className = 'score-badge nonzero bump flash';
+    setTimeout(() => badge.classList.remove('bump'), 800);
+    setTimeout(() => badge.classList.remove('flash'), 350);
+  }
+  document.getElementById('total-count').textContent = totalSum();
+}
+
+function removePoint(name, bid) {
+  const cls = currentClass();
+  if (!cls.scores[name] || cls.scores[name] <= 0) return;
+  cls.scores[name]--;
+  const today = todayKey();
+  if (!cls.history_minus) cls.history_minus = {};
+  if (!cls.history_minus[today]) cls.history_minus[today] = {};
+  cls.history_minus[today][name] = (cls.history_minus[today][name] || 0) + 1;
+  saveData();
+  const badge = document.getElementById(bid);
+  if (badge) {
+    badge.textContent = cls.scores[name];
+    badge.className = 'score-badge' + (cls.scores[name] > 0 ? ' nonzero' : '');
+  }
+  document.getElementById('total-count').textContent = totalSum();
+}
+
+function renderHistory() {
+  const cls = currentClass();
+  document.getElementById('hist-title').textContent = 'Historique — ' + data.activeClass;
+  const c = document.getElementById('hist-content');
+  const minus = cls.history_minus || {};
+  // Toutes les dates présentes dans + ou -
+  const allDays = [...new Set([...Object.keys(cls.history), ...Object.keys(minus)])].sort((a,b) => b.localeCompare(a));
+  if (!allDays.length) { c.innerHTML = '<p class="empty-msg">Aucune donnée pour l\'instant.</p>'; return; }
+  c.innerHTML = '';
+  allDays.forEach(day => {
+    const block = document.createElement('div');
+    block.className = 'day-block';
+    // Rassembler tous les élèves actifs ce jour
+    const names = [...new Set([...Object.keys(cls.history[day] || {}), ...Object.keys(minus[day] || {})])];
+    const entries = names.map(n => {
+      const p = (cls.history[day] && cls.history[day][n]) || 0;
+      const m = (minus[day] && minus[day][n]) || 0;
+      return [n, p, m];
+    }).filter(([,p,m]) => p > 0 || m > 0).sort((a,b) => (b[1]-b[2]) - (a[1]-a[2]));
+    const rows = entries.map(([n, p, m]) => {
+      const mStr = m > 0 ? `<span class="rcount-minus">−${m}</span>` : '';
+      const pStr = p > 0 ? `<span class="rcount">+${p}</span>` : '';
+      return `<div class="day-row"><span class="rname">${n}</span><span class="rcount-group">${pStr}${mStr}</span></div>`;
+    }).join('');
+    block.innerHTML = `<div class="day-title">${formatDate(day)}</div>${rows}`;
+    c.appendChild(block);
+  });
+}
+
+function renderClassList() {
+  const container = document.getElementById('class-list');
+  container.innerHTML = '';
+  Object.keys(data.classes).forEach(name => {
+    const cls = data.classes[name];
+    const count = cls.students ? cls.students.length : 0;
+    const isActive = name === data.activeClass;
+    const item = document.createElement('div');
+    item.className = 'class-item' + (isActive ? ' active-class' : '');
+    item.innerHTML = `
+      <div>
+        <div class="class-item-name">${name}</div>
+        <div class="class-item-count">${count} élève${count > 1 ? 's' : ''}</div>
+      </div>
+      <div class="class-item-actions">
+        <button class="btn-xs" data-rename="${name}">Renommer</button>
+        ${Object.keys(data.classes).length > 1 ? `<button class="btn-xs danger" data-delete="${name}">Supprimer</button>` : ''}
+      </div>`;
+    container.appendChild(item);
+  });
+  container.querySelectorAll('[data-rename]').forEach(btn => {
+    btn.onclick = () => openModal('rename', btn.dataset.rename);
+  });
+  container.querySelectorAll('[data-delete]').forEach(btn => {
+    btn.onclick = () => {
+      const name = btn.dataset.delete;
+      if (!confirm(`Supprimer "${name}" et toutes ses données ?`)) return;
+      delete data.classes[name];
+      if (data.activeClass === name) data.activeClass = Object.keys(data.classes)[0];
+      saveData();
+      renderClassList();
+      render();
+    };
+  });
+}
+
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+
+document.getElementById('class-select').onchange = e => {
+  data.activeClass = e.target.value;
+  saveData();
+  render();
+};
+
+document.getElementById('btn-manage-classes').onclick = () => { renderClassList(); showScreen('screen-classes'); };
+document.getElementById('btn-back-classes').onclick = () => showScreen('screen-main');
+document.getElementById('btn-new-class').onclick = () => openModal('new-class');
+document.getElementById('btn-hist').onclick = () => { renderHistory(); showScreen('screen-hist'); };
+document.getElementById('btn-back-hist').onclick = () => showScreen('screen-main');
+document.getElementById('btn-help').onclick = () => showScreen('screen-help');
+document.getElementById('btn-back-help').onclick = () => showScreen('screen-main');
+
+document.getElementById('btn-transfer').onclick = () => {
+  document.getElementById('export-text').value = JSON.stringify(data);
+  document.getElementById('import-text').value = '';
+  showScreen('screen-transfer');
+};
+document.getElementById('btn-back-transfer').onclick = () => showScreen('screen-main');
+document.getElementById('btn-copy').onclick = () => {
+  const txt = document.getElementById('export-text').value;
+  if (navigator.clipboard) {
+    navigator.clipboard.writeText(txt).then(() => showToast('Copié !')).catch(() => showToast('Sélectionnez le texte manuellement'));
+  } else showToast('Sélectionnez le texte manuellement');
+};
+document.getElementById('btn-import').onclick = () => {
+  const raw = document.getElementById('import-text').value.trim();
+  if (!raw) { showToast('Aucune donnée à importer'); return; }
+  try {
+    const d = JSON.parse(raw);
+    if (!d.classes) throw new Error();
+    data = d;
+    saveData();
+    showToast('Importé avec succès !');
+    showScreen('screen-main');
+    render();
+  } catch(e) { showToast('Données invalides, vérifiez le texte collé'); }
+};
+
+document.getElementById('btn-reset').onclick = () => openModal('reset');
+document.getElementById('btn-edit').onclick = () => openModal('edit-students');
+
+let modalMode = '';
+let modalTarget = '';
+
+function openModal(mode, target = '') {
+  modalMode = mode;
+  modalTarget = target;
+  const title = document.getElementById('modal-title');
+  const inputText = document.getElementById('modal-input-text');
+  const inputArea = document.getElementById('modal-input-area');
+  const hint = document.getElementById('modal-hint');
+  const confirm = document.getElementById('btn-confirm');
+  inputText.style.display = 'none';
+  inputArea.style.display = 'none';
+  hint.textContent = '';
+
+  if (mode === 'edit-students') {
+    title.textContent = 'Élèves — ' + data.activeClass;
+    inputArea.value = (currentClass().students || []).join('\n');
+    inputArea.style.display = 'block';
+    hint.textContent = 'Un élève par ligne';
+    confirm.textContent = 'Valider';
+  } else if (mode === 'reset') {
+    title.textContent = 'Réinitialiser ' + data.activeClass + ' ?';
+    hint.textContent = 'Les scores de cette classe seront remis à zéro. L\'historique est conservé.';
+    confirm.textContent = 'Oui, réinitialiser';
+  } else if (mode === 'new-class') {
+    title.textContent = 'Nouvelle classe';
+    inputText.value = '';
+    inputText.placeholder = 'Nom de la classe…';
+    inputText.style.display = 'block';
+    confirm.textContent = 'Créer';
+  } else if (mode === 'rename') {
+    title.textContent = 'Renommer la classe';
+    inputText.value = target;
+    inputText.style.display = 'block';
+    confirm.textContent = 'Renommer';
+  }
+  document.getElementById('modal').style.display = 'flex';
+}
+
+document.getElementById('btn-cancel').onclick = () => document.getElementById('modal').style.display = 'none';
+document.getElementById('btn-confirm').onclick = () => {
+  const inputText = document.getElementById('modal-input-text').value.trim();
+  const inputArea = document.getElementById('modal-input-area').value;
+
+  if (modalMode === 'edit-students') {
+    const lines = inputArea.split('\n').map(s => s.trim()).filter(Boolean);
+    currentClass().students = lines;
+    saveData();
+  } else if (modalMode === 'reset') {
+    currentClass().scores = {};
+    saveData();
+  } else if (modalMode === 'new-class') {
+    if (!inputText) { showToast('Entrez un nom de classe'); return; }
+    if (data.classes[inputText]) { showToast('Cette classe existe déjà'); return; }
+    data.classes[inputText] = { students: [], scores: {}, history: {} };
+    data.activeClass = inputText;
+    saveData();
+    renderClassList();
+  } else if (modalMode === 'rename') {
+    if (!inputText) { showToast('Entrez un nom'); return; }
+    if (inputText !== modalTarget && data.classes[inputText]) { showToast('Ce nom existe déjà'); return; }
+    if (inputText !== modalTarget) {
+      data.classes[inputText] = data.classes[modalTarget];
+      delete data.classes[modalTarget];
+      if (data.activeClass === modalTarget) data.activeClass = inputText;
+    }
+    saveData();
+    renderClassList();
+  }
+  document.getElementById('modal').style.display = 'none';
+  render();
+};
+
+// ── Export tableau CSV ───────────────────────────────────────────
+function exportHTML() {
+  const cls = currentClass();
+  const students = [...cls.students];
+  const history = cls.history || {};
+  const histMinus = cls.history_minus || {};
+
+  const dates = [...new Set([...Object.keys(history), ...Object.keys(histMinus)])].sort();
+
+  // ── Calcul des totaux par élève (sur tout l'historique) ──
+  const totalsPlus  = {};
+  const totalsMinus = {};
+  students.forEach(n => { totalsPlus[n] = 0; totalsMinus[n] = 0; });
+  dates.forEach(d => {
+    Object.entries(history[d] || {}).forEach(([n,v]) => { totalsPlus[n]  = (totalsPlus[n]  || 0) + v; });
+    Object.entries(histMinus[d] || {}).forEach(([n,v]) => { totalsMinus[n] = (totalsMinus[n] || 0) + v; });
+  });
+  const grandTotalPlus  = Object.values(totalsPlus).reduce((a,b) => a+b, 0);
+  const grandTotalMinus = Object.values(totalsMinus).reduce((a,b) => a+b, 0);
+
+  // ── Badge helpers ──
+  const bp = v => v > 0 ? `<span class="bp">+${v}</span>` : '';
+  const bm = v => v > 0 ? `<span class="bm">−${v}</span>` : '';
+
+  // ── Sections par jour ──
+  const daySections = dates.slice().reverse().map(d => {
+    const names = [...new Set([...Object.keys(history[d]||{}), ...Object.keys(histMinus[d]||{})])];
+    const rows = students.filter(n => names.includes(n)).map(n => {
+      const p = (history[d]||{})[n] || 0;
+      const m = (histMinus[d]||{})[n] || 0;
+      if (!p && !m) return '';
+      return `<div class="row"><span class="rname">${n}</span><span class="counts">${bp(p)}${bm(m)}</span></div>`;
+    }).filter(Boolean).join('');
+    if (!rows) return '';
+    return `<div class="day-block"><div class="day-title">${formatDate(d)}</div>${rows}</div>`;
+  }).filter(Boolean).join('');
+
+  // ── Section totaux ──
+  const totalRows = students.map(n => {
+    const p = totalsPlus[n] || 0;
+    const m = totalsMinus[n] || 0;
+    if (!p && !m) return '';
+    const net = p - m;
+    return `<div class="row"><span class="rname">${n}</span><span class="counts">${bp(p)}${bm(m)}<span class="bnet">${net}</span></span></div>`;
+  }).filter(Boolean).join('');
+
+  const html = `<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Pingpoint — ${data.activeClass} — ${formatDate(todayKey())}</title>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#f5f4ff;color:#1a1a1a;padding:24px 16px}
+  h1{font-size:20px;font-weight:600;color:#3C3489;margin-bottom:4px}
+  .subtitle{font-size:13px;color:#888;margin-bottom:24px}
+  .day-block{background:#fff;border:1px solid #e8e4ff;border-radius:12px;padding:14px 16px;margin-bottom:14px}
+  .day-title{font-size:14px;font-weight:600;color:#534AB7;margin-bottom:10px;padding-bottom:8px;border-bottom:1px solid #f0eeff}
+  .row{display:flex;justify-content:space-between;align-items:center;padding:5px 0;border-bottom:1px solid #f8f8ff}
+  .row:last-child{border-bottom:none}
+  .rname{font-size:13px;color:#1a1a1a}
+  .counts{display:flex;gap:6px;align-items:center}
+  .bp{font-size:12px;font-weight:600;color:#3C3489;background:#EEEDFE;border:1px solid #AFA9EC;border-radius:10px;padding:2px 9px}
+  .bm{font-size:12px;font-weight:600;color:#A32D2D;background:#FCEBEB;border:1px solid #f09595;border-radius:10px;padding:2px 9px}
+  .bnet{font-size:13px;font-weight:700;color:#1a1a1a;background:#f0f0f0;border:1px solid #d0d0d0;border-radius:10px;padding:2px 10px;margin-left:4px}
+  .totals-block{background:#fff;border:2px solid #534AB7;border-radius:12px;padding:14px 16px;margin-bottom:14px}
+  .totals-block .day-title{color:#534AB7}
+  .grand-total{background:#534AB7;color:#fff;border-radius:12px;padding:14px 16px;display:flex;justify-content:space-between;align-items:center}
+  .grand-total .label{font-size:14px;font-weight:600}
+  .grand-total .counts .bp{background:rgba(255,255,255,0.2);border-color:rgba(255,255,255,0.4);color:#fff}
+  .grand-total .counts .bm{background:rgba(255,255,255,0.15);border-color:rgba(255,255,255,0.3);color:#ffd0d0}
+  @media print{body{background:#fff;padding:12px}.day-block,.totals-block{break-inside:avoid}}
+</style>
+</head>
+<body>
+<h1>Pingpoint — ${data.activeClass}</h1>
+<div class="subtitle">Exporté le ${formatDate(todayKey())}</div>
+
+<div class="totals-block">
+  <div class="day-title">Totaux cumulés (tout l'historique)</div>
+  ${totalRows || '<div class="row"><span class="rname" style="color:#888">Aucune donnée</span></div>'}
+</div>
+
+<div class="grand-total">
+  <span class="label">Total général</span>
+  <span class="counts">${bp(grandTotalPlus)}${bm(grandTotalMinus)}<span class="bnet" style="background:rgba(255,255,255,0.2);border-color:rgba(255,255,255,0.4);color:#fff">${grandTotalPlus - grandTotalMinus}</span></span>
+</div>
+
+<div style="margin:20px 0 10px;font-size:13px;font-weight:600;color:#534AB7">Détail par séance</div>
+${daySections || '<div class="day-block"><div class="row"><span class="rname" style="color:#888">Aucun historique</span></div></div>'}
+</body></html>`;
+
+  const blob = new Blob([html], { type: 'text/html;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `pingpoint_${data.activeClass.replace(/\s+/g,'_')}_${todayKey()}.html`;
+  a.click();
+  URL.revokeObjectURL(url);
+  showToast('Fichier exporté');
+}
+
+document.getElementById('btn-export-csv').onclick = exportHTML;
+
+render();
+</script>
+
+<script>
+// ── PWA : icône + manifeste ──────────────────────────────────────
+(function() {
+  const SIZE = 512;
+  const c = document.createElement('canvas');
+  c.width = c.height = SIZE;
+  const ctx = c.getContext('2d');
+
+  // Bulle de dialogue (fond violet)
+  const bx = 20, by = 20, bw = SIZE-40, bh = 360, br = 56;
+  function bubble(fill) {
+    ctx.beginPath();
+    ctx.moveTo(bx+br, by);
+    ctx.lineTo(bx+bw-br, by); ctx.arcTo(bx+bw,by, bx+bw,by+br, br);
+    ctx.lineTo(bx+bw, by+bh-br); ctx.arcTo(bx+bw,by+bh, bx+bw-br,by+bh, br);
+    ctx.lineTo(bx+160, by+bh);
+    ctx.lineTo(bx+100, by+bh+90); // queue
+    ctx.lineTo(bx+80, by+bh);
+    ctx.lineTo(bx+br, by+bh); ctx.arcTo(bx,by+bh, bx,by+bh-br, br);
+    ctx.lineTo(bx, by+br); ctx.arcTo(bx,by, bx+br,by, br);
+    ctx.closePath();
+    ctx.fillStyle = fill; ctx.fill();
+  }
+
+  // Fond violet de la bulle
+  bubble('#534AB7');
+
+  // Union Jack clipé dans le rectangle de la bulle
+  const pad = 30;
+  ctx.save();
+  ctx.beginPath();
+  ctx.roundRect(bx+pad, by+pad, bw-pad*2, bh-pad*2, br-10);
+  ctx.clip();
+
+  const fx = bx+pad, fy = by+pad, fw = bw-pad*2, fh = bh-pad*2;
+
+  // Fond bleu
+  ctx.fillStyle = '#012169';
+  ctx.fillRect(fx, fy, fw, fh);
+
+  // Diagonales blanches larges
+  ctx.strokeStyle = 'white'; ctx.lineWidth = fw * 0.22;
+  ctx.beginPath(); ctx.moveTo(fx,fy); ctx.lineTo(fx+fw,fy+fh); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(fx+fw,fy); ctx.lineTo(fx,fy+fh); ctx.stroke();
+
+  // Diagonales rouges (St Patrick, légèrement décalées)
+  ctx.strokeStyle = '#C8102E'; ctx.lineWidth = fw * 0.12;
+  ctx.beginPath(); ctx.moveTo(fx,fy); ctx.lineTo(fx+fw,fy+fh); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(fx+fw,fy); ctx.lineTo(fx,fy+fh); ctx.stroke();
+
+  // Croix blanche (St George)
+  ctx.fillStyle = 'white';
+  ctx.fillRect(fx, fy + fh/2 - fh*0.12, fw, fh*0.24);
+  ctx.fillRect(fx + fw/2 - fw*0.12, fy, fw*0.24, fh);
+
+  // Croix rouge (St George)
+  ctx.fillStyle = '#C8102E';
+  ctx.fillRect(fx, fy + fh/2 - fh*0.072, fw, fh*0.144);
+  ctx.fillRect(fx + fw/2 - fw*0.072, fy, fw*0.144, fh);
+
+  ctx.restore();
+
+  const iconPNG = c.toDataURL('image/png');
+
+  // Apple touch icon
+  const link = document.createElement('link');
+  link.rel = 'apple-touch-icon';
+  link.href = iconPNG;
+  document.head.appendChild(link);
+
+  // Manifeste Android/Chrome
+  const manifest = {
+    name: 'Speaking Points',
+    short_name: 'Speaking Points',
+    description: 'Suivi des interventions orales en classe',
+    start_url: './',
+    display: 'standalone',
+    orientation: 'any',
+    background_color: '#534AB7',
+    theme_color: '#534AB7',
+    icons: [
+      { src: iconPNG, sizes: '512x512', type: 'image/png', purpose: 'any maskable' }
+    ]
+  };
+  const blob = new Blob([JSON.stringify(manifest)], {type:'application/json'});
+  const mlink = document.createElement('link');
+  mlink.rel = 'manifest';
+  mlink.href = URL.createObjectURL(blob);
+  document.head.appendChild(mlink);
+})();
+</script>
+</body>
+</html>
