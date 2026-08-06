@@ -29,11 +29,6 @@ body{font-family:system-ui,-apple-system,sans-serif;background:#f5f5f7}
 .btn-add-class{font-size:12px;padding:6px 10px;border:1px solid #534AB7;border-radius:8px;background:transparent;color:#534AB7;cursor:pointer;white-space:nowrap}
 .btn-add-class:hover{background:#EEEDFE}
 .toolbar{display:flex;align-items:center;justify-content:flex-end;margin-bottom:10px;gap:6px}
-.sort-group{display:flex;border:1px solid #d0d0d0;border-radius:8px;overflow:hidden}
-.sort-btn{font-size:12px;padding:5px 10px;background:#fff;color:#555;cursor:pointer;border:none;border-right:1px solid #d0d0d0;transition:background 0.1s;white-space:nowrap}
-.sort-btn:last-child{border-right:none}
-.sort-btn:hover{background:#f0f0f0}
-.sort-btn.active{background:#EEEDFE;color:#3C3489;font-weight:500}
 .student-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
 @media (orientation:landscape) and (min-width:700px){
   #app{max-width:1100px}
@@ -139,7 +134,7 @@ body{font-family:system-ui,-apple-system,sans-serif;background:#f5f5f7}
         <button class="btn-view" id="btn-vue-eleve" title="Affichage retourné pour les élèves">🧑‍🎓 Élèves</button>
         <button class="btn-small" id="btn-hist">Historique</button>
         <button class="btn-small" id="btn-reset">Réinitialiser</button>
-        <button class="btn-small" id="btn-edit">Élèves</button>
+        <button class="btn-small" id="btn-edit">📋 Noms</button>
         <button class="btn-icon" id="btn-help">?</button>
       </div>
     </div>
@@ -149,18 +144,10 @@ body{font-family:system-ui,-apple-system,sans-serif;background:#f5f5f7}
       <button class="btn-add-class" id="btn-manage-classes">Gérer les classes</button>
     </div>
 
-    <div class="toolbar">
-      <div class="sort-group">
-        <button class="sort-btn" id="sort-input" onclick="setSort('input')">Saisie</button>
-        <button class="sort-btn" id="sort-prenom" onclick="setSort('prenom')">A→Z prénom</button>
-        <button class="sort-btn" id="sort-nom" onclick="setSort('nom')">A→Z nom</button>
-      </div>
-    </div>
-
     <div id="student-grid-wrap"><div class="student-grid" id="grid"></div></div>
     <div id="empty-class" class="empty-class" style="display:none">
       <p>Aucun élève dans cette classe.</p>
-      <p style="margin-top:6px;font-size:13px">Ajoutez-en via le bouton "Élèves".</p>
+      <p style="margin-top:6px;font-size:13px">Ajoutez-en via le bouton "Noms".</p>
     </div>
     <div class="total-bar" id="total-bar" style="display:none">
       <span>Total interventions</span>
@@ -206,11 +193,10 @@ body{font-family:system-ui,-apple-system,sans-serif;background:#f5f5f7}
       <h2>Aide</h2>
     </div>
     <div class="tuto-block"><div class="tuto-icon">👆</div><div class="tuto-text"><span class="tuto-title">Enregistrer une intervention</span><span class="tuto-desc">Appuyez sur la carte d'un élève pour lui ajouter un point. Le badge violet s'incrémente à chaque tap.</span></div></div>
-    <div class="tuto-block"><div class="tuto-icon">🔤</div><div class="tuto-text"><span class="tuto-title">Ordre d'affichage</span><span class="tuto-desc">Trois options : ordre de saisie, tri A→Z par prénom (premier mot), tri A→Z par nom de famille (dernier mot). Le réglage est mémorisé.</span></div></div>
-    <div class="tuto-block"><div class="tuto-icon">✋</div><div class="tuto-text"><span class="tuto-title">Déplacer un élève</span><span class="tuto-desc">En mode "Saisie", restez appuyé un instant sur une carte puis faites-la glisser pour réorganiser l'ordre d'affichage. Disponible uniquement en tri "Saisie".</span></div></div>
+    <div class="tuto-block"><div class="tuto-icon">✋</div><div class="tuto-text"><span class="tuto-title">Déplacer un élève</span><span class="tuto-desc">Restez appuyé un instant sur une carte puis faites-la glisser pour réorganiser l'ordre d'affichage.</span></div></div>
     <div class="tuto-block"><div class="tuto-icon">🏫</div><div class="tuto-text"><span class="tuto-title">Gérer plusieurs classes</span><span class="tuto-desc">Utilisez le sélecteur en haut pour changer de classe. Via "Gérer les classes", créez, renommez ou supprimez vos classes.</span></div></div>
     <div class="tuto-block"><div class="tuto-icon">🎨</div><div class="tuto-text"><span class="tuto-title">Lire les badges en un coup d'œil</span><span class="tuto-desc">Badge gris = aucune intervention. Badge violet = au moins une intervention. Un flash vert confirme chaque nouveau point.</span></div></div>
-    <div class="tuto-block"><div class="tuto-icon">👥</div><div class="tuto-text"><span class="tuto-title">Gérer la liste d'élèves</span><span class="tuto-desc">Bouton "Élèves" : modifiez la liste de la classe active, un nom par ligne.</span></div></div>
+    <div class="tuto-block"><div class="tuto-icon">👥</div><div class="tuto-text"><span class="tuto-title">Gérer la liste d'élèves</span><span class="tuto-desc">Bouton "Noms" : modifiez la liste de la classe active, un nom par ligne.</span></div></div>
     <div class="tuto-block"><div class="tuto-icon">🔄</div><div class="tuto-text"><span class="tuto-title">Réinitialiser les scores</span><span class="tuto-desc">Remet à zéro les scores de la classe active. À faire en fin de trimestre. L'historique des séances est conservé.</span></div></div>
     <div class="tuto-block"><div class="tuto-icon">📅</div><div class="tuto-text"><span class="tuto-title">Historique par classe</span><span class="tuto-desc">L'historique est séparé par classe. Sélectionnez une classe puis appuyez sur "Historique" pour consulter ses séances passées.</span></div></div>
     <div class="tuto-block"><div class="tuto-icon">📲</div><div class="tuto-text"><span class="tuto-title">Utiliser sur plusieurs appareils</span><span class="tuto-desc">Bouton "Transfert" : exporte toutes vos classes et données en un seul bloc à copier-coller sur un autre appareil.</span></div></div>
@@ -261,7 +247,7 @@ function saveData() {
 }
 
 let data = loadData();
-let sortMode = localStorage.getItem(SORT_KEY) || 'input';
+let sortMode = 'input';
 
 function currentClass() {
   return data.classes[data.activeClass] || Object.values(data.classes)[0];
@@ -302,13 +288,6 @@ function setSort(mode) {
   render();
 }
 
-function updateSortButtons() {
-  ['input','prenom','nom'].forEach(m => {
-    const btn = document.getElementById('sort-' + m);
-    btn.classList.toggle('active', sortMode === m);
-  });
-}
-
 function showToast(msg) {
   const t = document.getElementById('toast');
   t.textContent = msg;
@@ -330,7 +309,6 @@ function renderClassSelector() {
 
 function render() {
   renderClassSelector();
-  updateSortButtons();
   const cls = currentClass();
   const grid = document.getElementById('grid');
   const emptyMsg = document.getElementById('empty-class');
