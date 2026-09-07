@@ -322,12 +322,13 @@ function render() {
   }
   emptyMsg.style.display = 'none';
 
-  sortedStudents(cls.students).forEach(name => {
+  sortedStudents(cls.students).forEach((name, idx) => {
     const sc = cls.scores[name] || 0;
     const bid = 'b' + btoa(encodeURIComponent(name)).replace(/[^a-zA-Z0-9]/g,'');
     const card = document.createElement('div');
     card.className = 'student-card' + (sortMode === 'input' ? ' draggable' : '');
     card.dataset.name = name;
+    card.dataset.idx = idx;
     card.innerHTML = `<div class="card-top"><div class="name">${name}</div><div class="score-badge${sc > 0 ? ' nonzero' : ''}" id="${bid}">${sc}</div></div><div class="card-controls"><button class="btn-minus" data-bid="${bid}" data-name="${name}">−</button><button class="btn-plus" data-bid="${bid}" data-name="${name}">+</button></div>`;
     card.querySelector('.btn-plus').addEventListener('click', e => { e.stopPropagation(); addPoint(name, bid); });
     card.querySelector('.btn-minus').addEventListener('click', e => { e.stopPropagation(); removePoint(name, bid); });
@@ -347,7 +348,6 @@ function enableCardDrag(card) {
     if (e.target.closest('.btn-plus,.btn-minus')) return;
     if (e.pointerType === 'mouse' && e.button !== 0) return;
 
-    const draggedName = card.dataset.name;
     const startX = e.clientX, startY = e.clientY;
     const pointerId = e.pointerId;
     let dragging = false;
@@ -431,12 +431,13 @@ function enableCardDrag(card) {
       if (placeholder) { placeholder.remove(); placeholder = null; }
 
       if (overCard && overCard !== card) {
-        const targetName = overCard.dataset.name;
         const students = currentClass().students;
-        const fromIdx = students.indexOf(draggedName);
-        const toIdx   = students.indexOf(targetName);
-        if (fromIdx !== -1 && toIdx !== -1 && fromIdx !== toIdx) {
-          // Échange simple des deux positions
+        const fromIdx = parseInt(card.dataset.idx, 10);
+        const toIdx   = parseInt(overCard.dataset.idx, 10);
+        if (!Number.isNaN(fromIdx) && !Number.isNaN(toIdx) && fromIdx !== toIdx
+            && fromIdx >= 0 && fromIdx < students.length && toIdx >= 0 && toIdx < students.length) {
+          // Échange simple des deux positions, basé sur la position réelle dans le tableau
+          // (et non sur le nom, pour éviter toute ambiguïté en cas d'homonymes)
           [students[fromIdx], students[toIdx]] = [students[toIdx], students[fromIdx]];
           saveData();
         }
