@@ -36,9 +36,10 @@ body{font-family:system-ui,-apple-system,sans-serif;background:#f5f5f7}
 }
 .student-card{position:relative;display:flex;flex-direction:column;border:1px solid #e0e0e0;border-radius:12px;background:#fff;overflow:hidden;user-select:none;-webkit-tap-highlight-color:transparent;-webkit-touch-callout:none;transition:border-color 0.15s,box-shadow 0.15s}
 .pap-flag{position:absolute;top:4px;right:4px;width:13px;height:13px;border-radius:50%;background:#fff;border:1.5px solid #d0d0d0;cursor:pointer;z-index:3;box-shadow:0 0 0 1px #fff}
-.pap-flag.flag-yellow{background:#FFC107;border-color:#dba300}
-.pap-flag.flag-orange{background:#FF8A00;border-color:#d97300}
+.pap-flag.flag-yellow{background:#FFF176;border-color:#F9A825}
+.pap-flag.flag-purple{background:#8E24AA;border-color:#6A1B9A}
 .pap-flag.flag-red{background:#e53935;border-color:#c62828}
+.pap-flag.flag-green{background:#43A047;border-color:#2e7d32}
 #student-grid-wrap.vue-eleve .pap-flag{display:none}
 .student-card.draggable{cursor:grab;touch-action:pan-y}
 .student-card.pressing{transform:scale(0.96);transition:transform 0.2s}
@@ -117,6 +118,12 @@ body{font-family:system-ui,-apple-system,sans-serif;background:#f5f5f7}
 .btn-view:not(.active):hover{background:#f0f0f0}
 #student-grid-wrap.vue-eleve{transform:rotate(180deg)}
 #student-grid-wrap.vue-eleve .student-card{transform:rotate(180deg)}
+.notes-box{margin-top:14px;padding:12px 14px;border-radius:10px;background:#FFF6B8;border:1px solid #EAD98C;box-shadow:0 1px 3px rgba(0,0,0,0.08)}
+.notes-label{font-size:12px;font-weight:500;color:#8a7300;margin-bottom:6px}
+.notes-textarea{width:100%;min-height:70px;border:none;background:transparent;resize:vertical;font-size:13px;font-family:inherit;color:#4a3f00;line-height:1.5}
+.notes-textarea:focus{outline:none}
+.notes-textarea::placeholder{color:#b3a24d}
+#student-grid-wrap.vue-eleve ~ #notes-box{display:none}
 .btn-cancel{font-size:13px;padding:8px 16px;border:1px solid #d0d0d0;border-radius:8px;background:#fff;color:#555;cursor:pointer}
 </style>
 </head>
@@ -157,6 +164,10 @@ body{font-family:system-ui,-apple-system,sans-serif;background:#f5f5f7}
     <div class="total-bar" id="total-bar" style="display:none">
       <span>Total interventions</span>
       <strong id="total-count">0</strong>
+    </div>
+    <div class="notes-box" id="notes-box">
+      <div class="notes-label">📝 Notes perso</div>
+      <textarea id="notes-text" class="notes-textarea" placeholder="Vos notes pour cette classe…"></textarea>
     </div>
   </div>
 
@@ -201,13 +212,14 @@ body{font-family:system-ui,-apple-system,sans-serif;background:#f5f5f7}
     <div class="tuto-block"><div class="tuto-icon">✋</div><div class="tuto-text"><span class="tuto-title">Déplacer un élève</span><span class="tuto-desc">Restez appuyé un instant sur une carte puis faites-la glisser pour réorganiser l'ordre d'affichage.</span></div></div>
     <div class="tuto-block"><div class="tuto-icon">🏫</div><div class="tuto-text"><span class="tuto-title">Gérer plusieurs classes</span><span class="tuto-desc">Utilisez le sélecteur en haut pour changer de classe. Via "Gérer les classes", créez, renommez ou supprimez vos classes.</span></div></div>
     <div class="tuto-block"><div class="tuto-icon">🎨</div><div class="tuto-text"><span class="tuto-title">Lire les badges en un coup d'œil</span><span class="tuto-desc">Badge gris = aucune intervention. Badge violet = au moins une intervention. Un flash vert confirme chaque nouveau point.</span></div></div>
-    <div class="tuto-block"><div class="tuto-icon">🟡</div><div class="tuto-text"><span class="tuto-title">Pastille repère (PAP / PPS / PAI)</span><span class="tuto-desc">Tapez sur le petit rond en haut à droite d'une carte pour le colorer : jaune = PAP, orange = PPS, rouge = PAI. Visible seulement en vue Prof, jamais côté élève ni dans les exports. Elle reste attachée au nom même si vous déplacez la carte.</span></div></div>
+    <div class="tuto-block"><div class="tuto-icon">🟡</div><div class="tuto-text"><span class="tuto-title">Pastille repère (PAP / PPS / PAI)</span><span class="tuto-desc">Tapez sur le petit rond en haut à droite d'une carte pour le colorer : jaune clair = PAP, violet = PPS, rouge = PAI, vert = PPRE. Visible seulement en vue Prof, jamais côté élève ni dans les exports. Elle reste attachée au nom même si vous déplacez la carte.</span></div></div>
+    <div class="tuto-block"><div class="tuto-icon">📝</div><div class="tuto-text"><span class="tuto-title">Notes perso</span><span class="tuto-desc">Le post-it en bas de l'écran garde vos notes libres pour la classe active (choses à penser, remarques...). Visible seulement en vue Prof, jamais côté élève ni dans les exports.</span></div></div>
     <div class="tuto-block"><div class="tuto-icon">👥</div><div class="tuto-text"><span class="tuto-title">Gérer la liste d'élèves</span><span class="tuto-desc">Bouton "Noms" : modifiez la liste de la classe active, un nom par ligne.</span></div></div>
     <div class="tuto-block"><div class="tuto-icon">🔄</div><div class="tuto-text"><span class="tuto-title">Réinitialiser les scores</span><span class="tuto-desc">Remet à zéro les scores de la classe active. À faire en fin de trimestre. L'historique des séances est conservé.</span></div></div>
     <div class="tuto-block"><div class="tuto-icon">📅</div><div class="tuto-text"><span class="tuto-title">Historique par classe</span><span class="tuto-desc">L'historique est séparé par classe. Sélectionnez une classe puis appuyez sur "Historique" pour consulter ses séances passées.</span></div></div>
     <div class="tuto-block"><div class="tuto-icon">📲</div><div class="tuto-text"><span class="tuto-title">Utiliser sur plusieurs appareils</span><span class="tuto-desc">Bouton "Transfert" : exporte toutes vos classes et données en un seul bloc à copier-coller sur un autre appareil.</span></div></div>
     <div class="tuto-block"><div class="tuto-icon">💾</div><div class="tuto-text"><span class="tuto-title">Sauvegarde automatique</span><span class="tuto-desc">Toutes les données sont enregistrées dans votre navigateur et persistent après fermeture.</span></div></div>
-    <p class="tuto-version">Speaking Points — v2.3</p>
+    <p class="tuto-version">Speaking Points — v2.6</p>
   </div>
 
 </div>
@@ -243,7 +255,8 @@ function loadData() {
         students: ['Élève 1','Élève 2','Élève 3','Élève 4','Élève 5','Élève 6','Élève 7','Élève 8','Élève 9','Élève 10','Élève 11','Élève 12','Élève 13','Élève 14','Élève 15','Élève 16','Élève 17','Élève 18','Élève 19','Élève 20','Élève 21','Élève 22','Élève 23','Élève 24','Élève 25','Élève 26','Élève 27','Élève 28','Élève 29','Élève 30'],
         scores: {},
         history: {},
-        flags: {}
+        flags: {},
+        notes: ''
       }
     }
   };
@@ -261,11 +274,11 @@ function currentClass() {
 }
 
 // ── Pastille PAP/PPS/PAI (repère perso, vue prof uniquement) ─────
-const FLAG_ORDER = [null, 'yellow', 'orange', 'red'];
-const FLAG_LABELS = { yellow: 'PAP', orange: 'PPS', red: 'PAI' };
+const FLAG_ORDER = [null, 'yellow', 'purple', 'red', 'green'];
+const FLAG_LABELS = { yellow: 'PAP', blue: 'PPS', red: 'PAI', green: 'PPRE' };
 
 function flagTitle(flag) {
-  return flag ? FLAG_LABELS[flag] + ' (cliquer pour changer)' : 'Repère perso (cliquer : PAP / PPS / PAI)';
+  return flag ? FLAG_LABELS[flag] + ' (cliquer pour changer)' : 'Repère perso (cliquer : PAP / PPS / PAI / PPRE)';
 }
 
 function cycleFlag(name, dotEl) {
@@ -368,7 +381,18 @@ function render() {
 
   document.getElementById('total-count').textContent = totalSum();
   bar.style.display = 'flex';
+
+  const notesEl = document.getElementById('notes-text');
+  if (notesEl.dataset.boundClass !== data.activeClass) {
+    notesEl.value = cls.notes || '';
+    notesEl.dataset.boundClass = data.activeClass;
+  }
 }
+
+document.getElementById('notes-text').addEventListener('input', e => {
+  currentClass().notes = e.target.value;
+  saveData();
+});
 
 const LONG_PRESS_MS = 350;
 const PRESS_CANCEL_DIST = 10;
@@ -621,6 +645,7 @@ document.getElementById('btn-import').onclick = () => {
     if (!d.classes) throw new Error();
     data = d;
     saveData();
+    document.getElementById('notes-text').dataset.boundClass = '';
     showToast('Importé avec succès !');
     showScreen('screen-main');
     render();
@@ -685,7 +710,7 @@ document.getElementById('btn-confirm').onclick = () => {
   } else if (modalMode === 'new-class') {
     if (!inputText) { showToast('Entrez un nom de classe'); return; }
     if (data.classes[inputText]) { showToast('Cette classe existe déjà'); return; }
-    data.classes[inputText] = { students: [], scores: {}, history: {}, flags: {} };
+    data.classes[inputText] = { students: [], scores: {}, history: {}, flags: {}, notes: '' };
     data.activeClass = inputText;
     saveData();
     renderClassList();
