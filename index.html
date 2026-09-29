@@ -48,7 +48,7 @@ body{font-family:system-ui,-apple-system,sans-serif;background:#f5f5f7}
   .aisle-3{grid-column:9}
   .aisle-row{display:block;grid-column:1/-1;justify-self:stretch;border-radius:4px;background:repeating-linear-gradient(to right,#c7c2e8 0 7px,transparent 7px 15px)}
 }
-.student-card{position:relative;display:flex;flex-direction:column;border:1px solid #e0e0e0;border-radius:12px;background:#fff;overflow:hidden;user-select:none;-webkit-tap-highlight-color:transparent;-webkit-touch-callout:none;transition:border-color 0.15s,box-shadow 0.15s}
+.student-card{position:relative;display:flex;flex-direction:column;border:1px solid #e0e0e0;border-radius:12px;background:#fff;overflow:hidden;-webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:transparent;-webkit-touch-callout:none;transition:border-color 0.15s,box-shadow 0.15s}
 .pap-flag{position:absolute;top:4px;right:4px;width:13px;height:13px;border-radius:50%;background:#fff;border:1.5px solid #d0d0d0;cursor:pointer;z-index:3;box-shadow:0 0 0 1px #fff}
 .pap-flag.flag-yellow{background:#FFF176;border-color:#F9A825}
 .pap-flag.flag-purple{background:#8E24AA;border-color:#6A1B9A}
@@ -446,11 +446,27 @@ document.getElementById('notes-text').addEventListener('input', e => {
 
 const LONG_PRESS_MS = 350;
 const PRESS_CANCEL_DIST = 10;
+let activeDragPointer = null; // un seul glisser-déposer à la fois (évite les doigts/paumes parasites sur tablette)
+
+// Carte visée : on regarde d'abord sous le CENTRE de la carte déplacée (ce que l'utilisateur voit),
+// puis sous le doigt en secours. La carte déplacée a pointer-events:none, elle ne gêne pas.
+function cardUnder(card, x, y) {
+  const r = card.getBoundingClientRect();
+  const points = [[r.left + r.width / 2, r.top + r.height / 2], [x, y]];
+  for (const [px, py] of points) {
+    const el = document.elementFromPoint(px, py);
+    const c = el && el.closest('.student-card[data-name]');
+    if (c && c !== card) return c;
+  }
+  return null;
+}
 
 function enableCardDrag(card) {
   card.addEventListener('pointerdown', e => {
     if (e.target.closest('.btn-plus,.btn-minus')) return;
     if (e.pointerType === 'mouse' && e.button !== 0) return;
+    if (!e.isPrimary || activeDragPointer !== null) return;
+    activeDragPointer = e.pointerId;
 
     const startX = e.clientX, startY = e.clientY;
     const pointerId = e.pointerId;
@@ -473,6 +489,8 @@ function enableCardDrag(card) {
 
     function startDrag() {
       dragging = true;
+      try { card.releasePointerCapture(pointerId); } catch (_) {}
+      if (window.getSelection) window.getSelection().removeAllRanges();
       card.classList.remove('pressing');
       const rect = card.getBoundingClientRect();
       offsetX = startX - rect.left;
@@ -506,10 +524,9 @@ function enableCardDrag(card) {
       card.style.left = (ev.clientX - offsetX) + 'px';
       card.style.top = (ev.clientY - offsetY) + 'px';
 
-      const below = document.elementFromPoint(ev.clientX, ev.clientY);
-      const overCard = below && below.closest('.student-card[data-name]');
+      const overCard = cardUnder(card, ev.clientX, ev.clientY);
       clearHighlight();
-      if (overCard && overCard !== card) {
+      if (overCard) {
         overCard.classList.add('drag-over');
         highlightedCard = overCard;
       }
@@ -521,20 +538,22 @@ function enableCardDrag(card) {
       document.removeEventListener('pointermove', onMove);
       document.removeEventListener('pointerup', onUp);
       document.removeEventListener('pointercancel', onUp);
+      document.removeEventListener('touchmove', onTouchMove);
+      activeDragPointer = null;
+      const cancelled = ev.type === 'pointercancel';
       card.classList.remove('pressing');
       clearHighlight();
       document.body.style.userSelect = '';
 
       if (!dragging) return;
 
-      const below = document.elementFromPoint(ev.clientX, ev.clientY);
-      const overCard = below && below.closest('.student-card[data-name]');
+      const overCard = cancelled ? null : cardUnder(card, ev.clientX, ev.clientY);
 
       card.classList.remove('dragging');
       card.style.width = card.style.height = card.style.left = card.style.top = '';
       if (placeholder) { placeholder.remove(); placeholder = null; }
 
-      if (overCard && overCard !== card) {
+      if (overCard) {
         const students = currentClass().students;
         const fromIdx = parseInt(card.dataset.idx, 10);
         const toIdx   = parseInt(overCard.dataset.idx, 10);
@@ -549,12 +568,16 @@ function enableCardDrag(card) {
       render();
     }
 
+    // Sans ça, le navigateur tactile lance un défilement vertical et annule le geste (pointercancel)
+    function onTouchMove(ev) { if (armed && ev.cancelable) ev.preventDefault(); }
+    document.addEventListener('touchmove', onTouchMove, { passive: false });
     document.addEventListener('pointermove', onMove, { passive: false });
     document.addEventListener('pointerup', onUp);
     document.addEventListener('pointercancel', onUp);
   });
 
   card.addEventListener('contextmenu', e => e.preventDefault());
+  card.addEventListener('selectstart', e => e.preventDefault());
 }
 
 function addPoint(name, bid) {
