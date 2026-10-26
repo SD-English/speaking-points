@@ -2,7 +2,7 @@
 <html lang="fr">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>Speaking Points</title>
   <!-- PWA iOS -->
   <meta name="apple-mobile-web-app-capable" content="yes">
@@ -139,6 +139,10 @@ body{font-family:system-ui,-apple-system,sans-serif;background:#f5f5f7}
 .notes-textarea::placeholder{color:#b3a24d}
 #student-grid-wrap.vue-eleve ~ #notes-box{display:none}
 .btn-cancel{font-size:13px;padding:8px 16px;border:1px solid #d0d0d0;border-radius:8px;background:#fff;color:#555;cursor:pointer}
+/* Anti-zoom iPad : pas de zoom au double-tap, pas de zoom auto à la prise de focus d'un champ */
+html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
+html,body,button,select{touch-action:manipulation}
+.class-select,.modal input[type=text],.modal textarea,.export-box,.notes-textarea{font-size:16px}
 </style>
 </head>
 <body>
@@ -256,6 +260,8 @@ body{font-family:system-ui,-apple-system,sans-serif;background:#f5f5f7}
 <div class="toast" id="toast"></div>
 
 <script>
+// Empêche le zoom par pincement (Safari iOS/iPadOS ignore parfois user-scalable=no)
+['gesturestart','gesturechange','gestureend'].forEach(t => document.addEventListener(t, e => e.preventDefault()));
 const STORAGE_KEY = 'pingpoint_v2';
 const SORT_KEY = 'pingpoint_sort';
 
